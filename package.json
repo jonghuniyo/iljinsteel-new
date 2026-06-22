@@ -1,0 +1,14 @@
+{
+  "name": "iljin-portal-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/vercel-build.mjs",
+    "check": "node --check assets/index-fixed-20260601-moongchi.js && node --check assets/steelmax-portal.js && for f in api/*.mjs netlify/functions/*.mjs scripts/*.mjs; do node --check \"$f\"; done",
+    "import:steelmax": "node ./scripts/steelmax-import.mjs"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
