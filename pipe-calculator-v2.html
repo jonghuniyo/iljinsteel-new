@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>일진제강 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;-webkit-text-size-adjust:100%}
+body{font-family:'맑은 고딕',sans-serif;background:#fff;min-height:100vh;min-height:100dvh;padding:0;display:block;overflow:auto;-webkit-overflow-scrolling:touch}
+.container{background:#fff;border-radius:0;box-shadow:none;width:100%;max-width:none;min-height:100vh;min-height:100dvh;overflow:hidden}
+
+.top-bar{background:#1A73E8;padding:18px 22px;color:#fff}
+.top-bar h2{font-size:1.2rem;letter-spacing:-.5px;font-weight:800}
+.top-bar p{font-size:.75rem;opacity:.9;margin-top:4px;font-weight:500}
+
+.tabs{display:flex;background:#f8fafc;border-bottom:1px solid #e5e9f0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;padding:12px 2px;min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#94a3b8;font-size:.72rem;font-weight:700;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap;touch-action:manipulation}
+.tab.active{color:#1A73E8;border-bottom-color:#1A73E8;background:#fff}
+.tab:hover:not(.active){color:#3b82f6}
+
+.content{display:none;padding:18px 20px 24px;animation:fi .25s}
+.content.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+.sec{font-size:12px;font-weight:700;color:#64748b;margin:16px 0 8px;padding-left:10px;border-left:3px solid #1A73E8;display:flex;align-items:center;gap:6px}
+.sec:first-child{margin-top:0}
+
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:8px}
+.row label{font-size:13px;color:#334155;font-weight:600;flex-shrink:0;min-width:80px}
+.row .inp-wrap{display:flex;gap:5px;align-items:center;flex:1;justify-content:flex-end}
+input[type=number],select{padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13.5px;transition:.2s;background:#fafbfc;color:#1e293b;min-height:38px}
+input[type=number]:focus,select:focus{border-color:#1A73E8;outline:none;background:#fff}
+input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
+.inp-main{width:150px;text-align:right}
+.inp-unit{width:68px;font-size:12px;cursor:pointer;text-align:center}
+.inp-full{width:210px;text-align:right}
+.inp-wide{width:100%;text-align:right}
+
+.toggle{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:14px}
+.tog-btn{flex:1;padding:8px;min-height:38px;text-align:center;cursor:pointer;color:#94a3b8;border-radius:6px;font-size:12px;font-weight:700;transition:.2s;user-select:none;touch-action:manipulation}
+.tog-btn.active{background:#fff;color:#1A73E8;box-shadow:0 2px 5px rgba(26,115,232,.15)}
+
+.nps-display{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:13px;color:#1e40af;margin-bottom:10px;display:flex;justify-content:space-between}
+.nps-display span{font-weight:700}
+
+.btn-calc{width:100%;padding:13px;min-height:46px;background:#1A73E8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px;transition:.2s;letter-spacing:-.3px;touch-action:manipulation}
+.btn-calc:hover{background:#1557b0;transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,115,232,.3)}
+
+.res-box{margin-top:16px;padding:16px 18px;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;display:none}
+.r-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13.5px;color:#475569;border-bottom:1px dashed #bfdbfe}
+.r-row:last-child{border-bottom:none}
+.r-row.total{margin-top:8px;padding-top:10px;border-top:2px solid #93c5fd;border-bottom:none;font-weight:800;color:#1A73E8;font-size:16px}
+.r-row.sub{font-size:12px;color:#64748b;border-bottom:none;padding:2px 0}
+.r-row b{color:#1e40af}
+
+.info-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-top:14px;font-size:11.5px;color:#64748b;line-height:1.7;border-left:3px solid #94a3b8}
+.info-box b{color:#334155}
+@media(max-width:560px){
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  .top-bar{padding:16px 18px}
+  .tabs{overflow-x:auto}
+  .tab{min-width:104px}
+  .content{padding:16px 16px 22px}
+  .row{align-items:flex-start;gap:7px;flex-direction:column}
+  .row label{width:100%}
+  .row .inp-wrap,.inp-full{width:100%;justify-content:stretch}
+  .inp-main{width:100%;flex:1;min-width:0}
+  .inp-unit{width:84px;flex-shrink:0}
+  input[type=number],select{font-size:16px;min-height:42px}
+  .tog-btn{min-height:42px;display:flex;align-items:center;justify-content:center}
+  .nps-display{flex-direction:column;gap:4px}
+  .r-row{align-items:flex-start;gap:8px}
+  .r-row .value,.r-row b{text-align:right}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-bar">
+    <h2>🔩 일진제강 계산기</h2>
+    <p>NPS 규격 · 중량 산출 · 단면율 · 역산 통합</p>
+    <p style="margin-top:6px;font-size:.7rem;opacity:.9">Made by 이종훈 · SMLS영업팀 (국내파트)</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('t4',this)">🔩 파이프 중량</div>
+    <div class="tab"        onclick="switchTab('t1',this)">📊 영업</div>
+    <div class="tab"        onclick="switchTab('t5',this)">🌍 해외영업</div>
+    <div class="tab"        onclick="switchTab('t2',this)">📉 단면 감소율</div>
+  </div>
+
+  <div id="t4" class="content active">
+    <div class="sec">📐 규격 입력 방식</div>
+    <div class="toggle">
+      <div class="tog-btn active" onclick="setpMode('manual',this.parentNode,this)">직접 입력</div>
+      <div class="tog-btn" onclick="setpMode('nps',this.parentNode,this)">NPS 규격 선택</div>
+    </div>
+
+    <div id="p-direct-in">
+      <div class="row">
+        <label>외경 OD</label>
+        <div class="inp-wrap">
+          <input type="number" id="p_od" class="inp-main" placeholder="값 입력" step="0.01">
+          <select id="p_od_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <label>두께 WT</label>
+        <div class="inp-wrap">
+          <input type="number" id="p_wt" class="inp-main" placeholder="값 입력" step="0.01">
+          <select id="p_wt_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="p-nps-in" style="display:none">
+      <div class="row">
+        <label>NPS 사이즈</label>
+        <select id="p_nps_sz" class="inp-full" onchange="onpNPSChange()"><option value="">-- 크기 순 정렬됨 --</option></select>
+      </div>
+      <div class="row">
+        <label>스케줄</label>
+        <select id="p_nps_sc" class="inp-full" onchange="onpSchChange()"><option value="">-- NPS 먼저 선택 --</option></select>
+      </div>
+      <div class="nps-display" id="p_nps_result" style="display:none">
+        <span>OD: <span id="pd_od">-</span> mm</span>
+        <span>WT: <span id="pd_wt">-</span> mm</span>
+        <span>내경: <span id="pd_id">-</span> mm</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>길이 L</label>
+      <div class="inp-wrap">
+        <input type="number" id="p_len" class="inp-main" placeholder="값 입력" step="1">
+        <select id="p_len_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>수량</label>
+      <div class="inp-wrap">
+        <input type="number" id="p_qty" class="inp-main" value="1" min="1">
+        <span style="font-size:12px;color:#64748b;width:68px;text-align:center">본 (pcs)</span>
+      </div>
+    </div>
+
+    <div class="sec">🧪 재질 & 단중계수</div>
+    <div class="row">
+      <label>재질</label>
+      <select id="p_mat" class="inp-full" onchange="onMatChange('p_mat','p_fac_row')">
+        <option value="0.02466">탄소강  (계수 0.02466)</option>
+        <option value="0.02491">STS 304L  (계수 0.02491)</option>
+        <option value="0.02507">STS 316L  (계수 0.02507)</option>
+        <option value="0.00848">알루미늄  (계수 0.00848)</option>
+        <option value="manual">직접 입력</option>
+      </select>
+    </div>
+    <div class="row" id="p_fac_row" style="display:none">
+      <label>단중계수</label>
+      <input type="number" id="p_fac" class="inp-full" placeholder="예: 0.02466" step="0.00001">
+    </div>
+
+    <button class="btn-calc" onclick="calcT4()">중량 계산</button>
+
+    <div class="res-box" id="res4">
+      <div class="r-row"><span>환산 규격</span><span id="r4_spec">-</span></div>
+      <div class="r-row"><span>본당 중량</span><b id="r4_wunit">-</b></div>
+      <div class="r-row total"><span>총 중량 결과</span><span id="r4_wtot">-</span></div>
+    </div>
+
+    <div class="info-box">
+      <b>💡 파이프 중량 계산 공식 안내</b><br>
+      • 중량 산출 공식: <b>(외경 - 두께) × 두께 × 길이(m) × 단중계수 × 수량</b><br>
+      • 직접 수치를 기입하거나 NPS 규격을 선택하면 파이프의 단위 중량 및 대량 유통 총중량이 자동 산출됩니다.
+    </div>
+  </div>
+
+  <div id="t1" class="content">
+    <div class="sec">📐 규격 입력 방식</div>
+    <div class="toggle">
+      <div class="tog-btn active" onclick="setMode('manual',this.parentNode,this)">직접 입력</div>
+      <div class="tog-btn" onclick="setMode('nps',this.parentNode,this)">NPS 규격 선택</div>
+    </div>
+
+    <div id="direct-in">
+      <div class="row">
+        <label>외경 OD</label>
+        <div class="inp-wrap">
+          <input type="number" id="w_od" class="inp-main" placeholder="값 입력" step="0.01">
+          <select id="w_od_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <label>두께 WT</label>
+        <div class="inp-wrap">
+          <input type="number" id="w_wt" class="inp-main" placeholder="값 입력" step="0.01">
+          <select id="w_wt_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="nps-in" style="display:none">
+      <div class="row">
+        <label>NPS 사이즈</label>
+        <select id="nps_sz" class="inp-full" onchange="onNPSChange()"><option value="">-- 크기 순 정렬됨 --</option></select>
+      </div>
+      <div class="row">
+        <label>스케줄</label>
+        <select id="nps_sc" class="inp-full" onchange="onSchChange()"><option value="">-- NPS 먼저 선택 --</option></select>
+      </div>
+      <div class="nps-display" id="nps_result" style="display:none">
+        <span>OD: <span id="nd_od">-</span> mm</span>
+        <span>WT: <span id="nd_wt">-</span> mm</span>
+        <span>내경: <span id="nd_id">-</span> mm</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>길이 L</label>
+      <div class="inp-wrap">
+        <input type="number" id="w_len" class="inp-main" placeholder="값 입력" step="1">
+        <select id="w_len_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+      </div>
+    </div>
+
+    <div class="sec">🧪 재질 & 단중계수</div>
+    <div class="row">
+      <label>재질</label>
+      <select id="w_mat" class="inp-full" onchange="onMatChange('w_mat','w_fac_row')">
+        <option value="0.02466">탄소강  (계수 0.02466)</option>
+        <option value="0.02491">STS 304L  (계수 0.02491)</option>
+        <option value="0.02507">STS 316L  (계수 0.02507)</option>
+        <option value="0.00848">알루미늄  (계수 0.00848)</option>
+        <option value="manual">직접 입력</option>
+      </select>
+    </div>
+    <div class="row" id="w_fac_row" style="display:none">
+      <label>단중계수</label>
+      <input type="number" id="w_fac" class="inp-full" placeholder="예: 0.02466" step="0.00001">
+    </div>
+
+    <div class="sec">💰 가격 계산 모드</div>
+    <div class="row">
+      <label>구할 항목</label>
+      <select id="price_mode" class="inp-full" onchange="onPriceModeChange()">
+        <option value="get_price">개당 가격 계산</option>
+        <option value="get_unit">단가 역산 (총가격 입력)</option>
+        <option value="get_weight">본당 중량 역산</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>단가 단위</label>
+      <select id="price_unit" class="inp-full" onchange="onPriceModeChange()">
+        <option value="kg">원 / kg  (기본)</option>
+        <option value="ton">원 / ton  (MT)</option>
+      </select>
+    </div>
+    <div id="price_fields"></div>
+
+    <button class="btn-calc" onclick="calcT1()">계산하기</button>
+
+    <div class="res-box" id="res1">
+      <div class="r-row"><span>규격 (mm)</span><span id="r1_spec">-</span></div>
+      <div class="r-row"><span>본당 중량</span><b id="r1_wt">-</b></div>
+      <div class="r-row total"><span id="r1_lbl">개당 가격</span><span id="r1_val">-</span></div>
+    </div>
+
+    <div class="info-box">
+      <b>💡 단중계수 & 단위 안내</b><br>
+      • 탄소강 <b>0.02466</b> | STS 304L <b>0.02491</b> | STS 316L <b>0.02507</b><br>
+      • 공식: (OD-WT)×WT×L(m)×단중계수 = kg<br>
+      • <b>NPS 1"의 실제 OD = 33.40mm</b> (명목 25.4mm와 다름에 주의!)
+    </div>
+  </div>
+
+  <div id="t5" class="content">
+    <div class="sec">💱 환율 설정</div>
+    <div class="row">
+      <label>통화</label>
+      <select id="ex_cur" class="inp-full" onchange="onExCurChange()">
+        <option value="USD">🇺🇸 달러 (USD)</option>
+        <option value="EUR">🇪🇺 유로 (EUR)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>환율</label>
+      <div class="inp-wrap">
+        <input type="number" id="ex_rate" class="inp-main" placeholder="예: 1380" step="0.1">
+        <span id="ex_rate_lbl" style="font-size:12px;color:#64748b;white-space:nowrap">원/USD</span>
+      </div>
+    </div>
+
+    <div class="sec">🔄 계산 모드</div>
+    <div class="row">
+      <label>구할 항목</label>
+      <select id="ex_mode" class="inp-full" onchange="onExModeChange()">
+        <option value="fwd">정방향 — 총액·본당가격 계산</option>
+        <option value="rev_pt">역산 — 톤당 단가 (총외화 입력)</option>
+        <option value="rev_pt_krw">역산 — 톤당 단가 (총원화 입력)</option>
+        <option value="rev_pt_pcs">역산 — 톤당 단가 (본당 외화 입력)</option>
+      </select>
+    </div>
+
+    <div id="ex_fwd_fields">
+      <div class="sec">📦 견적 단가</div>
+      <div class="row">
+        <label>단가 단위</label>
+        <select id="ex_price_unit" class="inp-full" onchange="onExPriceUnitChange()">
+          <option value="MT">외화 / MT  (기본)</option>
+          <option value="kg">외화 / kg</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>단가</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_price_t" class="inp-main" placeholder="예: 1200" step="0.01">
+          <span id="ex_sym_lbl" style="font-size:12px;color:#64748b;white-space:nowrap">$/MT</span>
+        </div>
+      </div>
+      <div class="row">
+        <label>수량</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_qty" class="inp-main" placeholder="예: 10.5" step="0.001">
+          <span style="font-size:12px;color:#64748b">MT</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="ex_rev_fields" style="display:none">
+      <div class="sec">🔍 역산 기준값</div>
+      <div class="row" id="ex_rev_row_fx">
+        <label id="ex_rev_lbl">총 외화금액</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_rev_val" class="inp-main" placeholder="값 입력" step="0.01">
+          <span id="ex_rev_unit" style="font-size:12px;color:#64748b;white-space:nowrap">USD</span>
+        </div>
+      </div>
+      <div class="row" id="ex_rev_qty_row">
+        <label>수량</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_rev_qty" class="inp-main" placeholder="MT 또는 본" step="0.001">
+          <span id="ex_rev_qty_unit" style="font-size:12px;color:#64748b">MT</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">🔩 파이프 규격 <span style="font-size:10px;font-weight:400;color:#94a3b8">（입력 시 본당 단가 자동 계산）</span></div>
+
+    <div class="toggle" style="margin-bottom:10px">
+      <div class="tog-btn active" onclick="setExMode('manual',this.parentNode,this)">직접 입력</div>
+      <div class="tog-btn" onclick="setExMode('nps',this.parentNode,this)">NPS 선택</div>
+    </div>
+
+    <div id="ex_direct">
+      <div class="row">
+        <label>외경 OD</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_od" class="inp-main" placeholder="값 입력" step="0.01">
+          <select id="ex_od_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <label>두께 WT</label>
+        <div class="inp-wrap">
+          <input type="number" id="ex_wt" class="inp-main" placeholder="값 입력" step="0.001">
+          <select id="ex_wt_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="ex_nps" style="display:none">
+      <div class="row">
+        <label>NPS 사이즈</label>
+        <select id="ex_nps_sz" class="inp-full" onchange="onExNPSChange()"><option value="">-- 크기 순 정렬됨 --</option></select>
+      </div>
+      <div class="row">
+        <label>스케줄</label>
+        <select id="ex_nps_sc" class="inp-full" onchange="onExSchChange()"><option value="">-- NPS 먼저 선택 --</option></select>
+      </div>
+      <div class="nps-display" id="ex_nps_result" style="display:none">
+        <span>OD: <span id="ex_nd_od">-</span> mm</span>
+        <span>WT: <span id="ex_nd_wt">-</span> mm</span>
+        <span>내경: <span id="ex_nd_id">-</span> mm</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>길이</label>
+      <div class="inp-wrap">
+        <input type="number" id="ex_len" class="inp-main" placeholder="값 입력" step="1">
+        <select id="ex_len_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option><option value="ft">feet</option></select>
+      </div>
+    </div>
+    <div class="row"><label>수량 (본)</label><input type="number" id="ex_pcs" class="inp-full" value="1" min="1"></div>
+
+    <div class="sec">🧪 재질 & 단중계수</div>
+    <div class="row">
+      <label>재질</label>
+      <select id="ex_mat" class="inp-full" onchange="onMatChange('ex_mat','ex_fac_row')">
+        <option value="0.02466">탄소강  (0.02466)</option>
+        <option value="0.02491">STS 304L  (0.02491)</option>
+        <option value="0.02507">STS 316L  (0.02507)</option>
+        <option value="manual">직접 입력</option>
+      </select>
+    </div>
+    <div class="row" id="ex_fac_row" style="display:none">
+      <label>단중계수</label>
+      <input type="number" id="ex_fac" class="inp-full" placeholder="예: 0.02466" step="0.00001">
+    </div>
+
+    <button class="btn-calc" onclick="calcT5()">견적 계산</button>
+
+    <div class="res-box" id="res5">
+      <div class="r-row"><span>통화 / 환율</span><span id="e_rate_sum">-</span></div>
+      <div class="r-row"><span>계산 모드</span><span id="e_mode_sum">-</span></div>
+
+      <div id="e_rev_block" style="display:none">
+        <div class="r-row" style="border-top:2px solid #bfdbfe;margin-top:6px;padding-top:8px">
+          <span>역산된 톤당 단가</span>
+          <b id="e_rev_pt" style="color:#1e40af;font-size:16px">-</b>
+        </div>
+        <div class="r-row sub"><span>원화 환산 단가</span><span id="e_rev_pt_krw">-</span></div>
+        <div class="r-row sub"><span>kg당 원화</span><span id="e_rev_kg_krw">-</span></div>
+      </div>
+
+      <div id="e_fwd_block">
+        <div class="r-row"><span>톤당 단가</span><b id="e_price_t">-</b></div>
+        <div class="r-row"><span>수량</span><span id="e_qty">-</span></div>
+        <div class="r-row" style="border-top:2px solid #bfdbfe;margin-top:6px;padding-top:8px">
+          <span>총 외화금액</span><b id="e_total_fx" style="color:#1e40af;font-size:16px">-</b>
+        </div>
+        <div class="r-row total">
+          <span>총 원화금액</span><span id="e_total_krw">-</span>
+        </div>
+        <div class="r-row sub"><span>단가 단위 환산</span><span id="e_kg_krw">-</span></div>
+      </div>
+
+      <div id="e_pipe_block" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #bfdbfe">
+        <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px">📐 파이프 규격별 상세</div>
+        <div class="r-row sub"><span>규격</span><span id="e_p_spec">-</span></div>
+        <div class="r-row"><span>본당 중량</span><span id="e_p_wunit">-</span></div>
+        <div class="r-row"><span>총 중량</span><span id="e_p_wtot">-</span></div>
+        <div class="r-row"><span>본당 가격 (외화)</span><b id="e_p_pfx">-</b></div>
+        <div class="r-row"><span>본당 가격 (원화)</span><b id="e_p_pkrw">-</b></div>
+        <div class="r-row" style="border-top:1px solid #bfdbfe;margin-top:6px;padding-top:8px">
+          <span>전체 외화합계</span><b id="e_p_tfx" style="font-size:15px">-</b>
+        </div>
+        <div class="r-row total">
+          <span>전체 원화합계</span><span id="e_p_tkrw">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="t2" class="content">
+    <div class="sec">📦 인발 전 (Before)</div>
+    <div class="row"><label>외경 OD</label><div class="inp-wrap"><input type="number" id="r_od1" class="inp-main" placeholder="mm" step="0.01"><select id="r_od1_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select></div></div>
+    <div class="row"><label>두께 WT</label><div class="inp-wrap"><input type="number" id="r_wt1" class="inp-main" placeholder="mm" step="0.01"><select id="r_wt1_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select></div></div>
+
+    <div class="sec">🎯 인발 후 (After)</div>
+    <div class="row"><label>외경 OD</label><div class="inp-wrap"><input type="number" id="r_od2" class="inp-main" placeholder="mm" step="0.01"><select id="r_od2_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select></div></div>
+    <div class="row"><label>두께 WT</label><div class="inp-wrap"><input type="number" id="r_wt2" class="inp-main" placeholder="mm" step="0.01"><select id="r_wt2_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select></div></div>
+
+    <button class="btn-calc" onclick="calcT2()">감소율 계산</button>
+
+    <div class="res-box" id="res2">
+      <div class="r-row"><span>전 단면적 A₁</span><b id="r2_a1">-</b></div>
+      <div class="r-row"><span>후 단면적 A₂</span><b id="r2_a2">-</b></div>
+      <div class="r-row"><span>내경 변화</span><span id="r2_id">-</span></div>
+      <div class="r-row total"><span>단면적 감소율</span><span id="r2_red">-</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  NPS 테이블 (ANSI/ASME B36.10M 기준)
+// ══════════════════════════════════════════
+const NPS_TABLE = {
+  '1/8':  { od:10.29,  sch:{'SCH 40/STD':1.73,'SCH 80/XH':2.41}},
+  '1/4':  { od:13.72,  sch:{'SCH 40/STD':2.24,'SCH 80/XH':3.02}},
+  '3/8':  { od:17.15,  sch:{'SCH 40/STD':2.31,'SCH 80/XH':3.20}},
+  '1/2':  { od:21.34,  sch:{'SCH 5S':1.65,'SCH 10S':2.11,'SCH 40/STD':2.77,'SCH 80/XH':3.73,'SCH 160':4.78,'XXH':7.47}},
+  '3/4':  { od:26.67,  sch:{'SCH 5S':1.65,'SCH 10S':2.11,'SCH 40/STD':2.87,'SCH 80/XH':3.91,'SCH 160':5.54,'XXH':7.82}},
+  '1':    { od:33.40,  sch:{'SCH 5S':1.65,'SCH 10S':2.77,'SCH 40/STD':3.38,'SCH 80/XH':4.55,'SCH 160':6.35,'XXH':9.09}},
+  '1-1/4':{ od:42.16,  sch:{'SCH 5S':1.65,'SCH 10S':2.77,'SCH 40/STD':3.56,'SCH 80/XH':4.85,'SCH 160':6.35,'XXH':9.70}},
+  '1-1/2':{ od:48.26,  sch:{'SCH 5S':1.65,'SCH 10S':2.77,'SCH 40/STD':3.68,'SCH 80/XH':5.08,'SCH 160':7.14,'XXH':10.16}},
+  '2':    { od:60.33,  sch:{'SCH 5S':1.65,'SCH 10S':2.77,'SCH 40/STD':3.91,'SCH 80/XH':5.54,'SCH 160':8.74,'XXH':11.07}},
+  '2-1/2':{ od:73.03,  sch:{'SCH 5S':2.11,'SCH 10S':3.05,'SCH 40/STD':5.16,'SCH 80/XH':7.01,'SCH 160':9.53,'XXH':14.02}},
+  '3':    { od:88.90,  sch:{'SCH 5S':2.11,'SCH 10S':3.05,'SCH 40/STD':5.49,'SCH 80/XH':7.62,'SCH 160':11.13,'XXH':15.24}},
+  '3-1/2':{ od:101.60, sch:{'SCH 5S':2.11,'SCH 10S':3.05,'SCH 40/STD':5.74,'SCH 80/XH':8.08}},
+  '4':    { od:114.30, sch:{'SCH 5S':2.11,'SCH 10S':3.05,'SCH 40/STD':6.02,'SCH 80/XH':8.56,'SCH 120':11.13,'SCH 160':13.49,'XXH':17.12}},
+  '5':    { od:141.30, sch:{'SCH 5S':2.77,'SCH 10S':3.40,'SCH 40/STD':6.55,'SCH 80/XH':9.53,'SCH 120':12.70,'SCH 160':15.88,'XXH':19.05}},
+  '6':    { od:168.28, sch:{'SCH 5S':2.77,'SCH 10S':3.40,'SCH 40/STD':7.11,'SCH 80/XH':10.97,'SCH 120':14.27,'SCH 160':18.26,'XXH':21.95}},
+  '8':    { od:219.08, sch:{'SCH 5S':2.77,'SCH 10S':3.76,'SCH 20':6.35,'SCH 30':7.04,'SCH 40/STD':8.18,'SCH 60':10.31,'SCH 80/XH':12.70,'SCH 100':15.09,'SCH 120':18.26,'SCH 140':20.62,'SCH 160':23.01}},
+  '10':   { od:273.05, sch:{'SCH 5S':3.40,'SCH 10S':4.19,'SCH 20':6.35,'SCH 30/STD':7.80,'SCH 40':9.27,'SCH 60/XH':12.70,'SCH 80':15.09,'SCH 100':18.26,'SCH 120':21.44,'SCH 140':25.40,'SCH 160':28.58}},
+  '12':   { od:323.85, sch:{'SCH 5S':3.96,'SCH 10S':4.57,'SCH 20':6.35,'SCH 30':8.38,'SCH STD':9.53,'SCH 40':10.31,'SCH 60/XH':14.27,'SCH 80':17.48,'SCH 100':21.44,'SCH 120':25.40,'SCH 140':28.58,'SCH 160':33.33}},
+  '14':   { od:355.60, sch:{'SCH 5S':3.96,'SCH 10S':6.35,'SCH 20/STD':9.53,'SCH 30':11.13,'SCH 40/XH':12.70,'SCH 60':15.88,'SCH 80':19.05,'SCH 100':23.80,'SCH 120':27.79,'SCH 140':31.75,'SCH 160':35.71}},
+  '16':   { od:406.40, sch:{'SCH 5S':4.19,'SCH 10S':6.35,'SCH 20/STD':9.53,'SCH 30':11.13,'SCH 40/XH':12.70,'SCH 60':16.66,'SCH 80':21.44,'SCH 100':26.19,'SCH 120':30.96,'SCH 140':36.53,'SCH 160':40.49}},
+  '18':   { od:457.20, sch:{'SCH 5S':4.19,'SCH 10S':6.35,'SCH 20/STD':9.53,'SCH XH':12.70,'SCH 40':14.27,'SCH 80':19.05,'SCH 100':23.80,'SCH 120':29.36,'SCH 140':34.93,'SCH 160':39.67}},
+  '20':   { od:508.00, sch:{'SCH 5S':4.78,'SCH 10S':6.35,'SCH 20/STD':9.53,'SCH 30/XH':12.70,'SCH 40':15.09,'SCH 60':20.62,'SCH 80':26.19,'SCH 100':32.54,'SCH 120':38.10,'SCH 140':44.45,'SCH 160':50.01}},
+  '24':   { od:609.60, sch:{'SCH 5S':5.54,'SCH 10S':6.35,'SCH 20/STD':9.53,'SCH XH':12.70,'SCH 30':14.27,'SCH 40':17.48,'SCH 60':24.61,'SCH 80':30.96,'SCH 100':38.89,'SCH 120':46.02,'SCH 140':52.37,'SCH 160':59.54}},
+};
+
+function getSortedNPSKeys() { return Object.keys(NPS_TABLE).sort((a, b) => NPS_TABLE[a].od - NPS_TABLE[b].od); }
+function toMM(v, unit) { if (unit==='in') return v * 25.4; if (unit==='ft') return v * 304.8; return v; }
+function g(id, uid) { const v = parseFloat(document.getElementById(id).value); const u = document.getElementById(uid)?.value || 'mm'; return isNaN(v) ? NaN : toMM(v, u); }
+function getFac(matId, facId) { const v = document.getElementById(matId).value; return v==='manual' ? parseFloat(document.getElementById(facId).value) : parseFloat(v); }
+function onMatChange(selId, rowId) { document.getElementById(rowId).style.display = document.getElementById(selId).value === 'manual' ? '' : 'none'; }
+function fmt(n, dec=2) { return isNaN(n)?'-':n.toLocaleString('ko-KR',{maximumFractionDigits:dec,minimumFractionDigits:dec}); }
+function fmtK(n) { return isNaN(n)?'-':Math.round(n).toLocaleString('ko-KR')+'원'; }
+function isPos(n) { return Number.isFinite(n) && n > 0; }
+function validPipeDims(od, wt) { return isPos(od) && isPos(wt) && wt * 2 < od; }
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.querySelectorAll('.content').forEach(c=>c.classList.remove('active')); document.getElementById(id).classList.add('active');
+}
+
+// ══════ TAB 4: 파이프 중량 계산 ══════
+let pInputMode = 'manual'; let pNpsOD = null, pNpsWT = null;
+function initpNPS() { const sel = document.getElementById('p_nps_sz'); getSortedNPSKeys().forEach(k => { const o = document.createElement('option'); o.value = k; o.text = `NPS ${k}"  →  OD ${NPS_TABLE[k].od} mm`; sel.appendChild(o); }); }
+function setpMode(mode, toggleEl, btn) { pInputMode = mode; toggleEl.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('p-direct-in').style.display = mode==='manual' ? '' : 'none'; document.getElementById('p-nps-in').style.display = mode==='nps' ? '' : 'none'; calcT4(false); }
+function onpNPSChange() { const k = document.getElementById('p_nps_sz').value; const ssel = document.getElementById('p_nps_sc'); ssel.innerHTML = '<option value="">-- 스케줄 선택 --</option>'; document.getElementById('p_nps_result').style.display = 'none'; pNpsOD = null; pNpsWT = null; if (!k) return; Object.entries(NPS_TABLE[k].sch).forEach(([s,t]) => { const o = document.createElement('option'); o.value = t; o.text = `${s}  (WT ${t} mm)`; ssel.appendChild(o); }); }
+function onpSchChange() { const k = document.getElementById('p_nps_sz').value; const wt = parseFloat(document.getElementById('p_nps_sc').value); if (!k || isNaN(wt)) return; pNpsOD = NPS_TABLE[k].od; pNpsWT = wt; document.getElementById('pd_od').textContent = pNpsOD; document.getElementById('pd_wt').textContent = pNpsWT; document.getElementById('pd_id').textContent = (pNpsOD - 2*pNpsWT).toFixed(2); document.getElementById('p_nps_result').style.display = 'flex'; }
+function resetT4Result() {
+  document.getElementById('r4_spec').textContent = '-';
+  document.getElementById('r4_wunit').textContent = '-';
+  document.getElementById('r4_wtot').textContent = '-';
+  document.getElementById('res4').style.display = 'none';
+}
+function calcT4(showAlert=true) {
+  let od, wt;
+  if (pInputMode==='nps') { if (!pNpsOD) { if (showAlert) alert('NPS 사이즈와 스케줄을 선택하세요.'); resetT4Result(); return false; } od=pNpsOD; wt=pNpsWT; } 
+  else { od=g('p_od','p_od_u'); wt=g('p_wt','p_wt_u'); }
+  
+  const len = g('p_len','p_len_u');
+  const qtyRaw = parseFloat(document.getElementById('p_qty').value);
+  const qty = Number.isFinite(qtyRaw) ? qtyRaw : 1;
+  const fac = getFac('p_mat','p_fac');
+
+  if (!isPos(od)||!isPos(wt)||!isPos(len)) { if (showAlert) alert('규격을 모두 입력해주세요.'); resetT4Result(); return false; }
+  if (!validPipeDims(od, wt)) { if (showAlert) alert('두께는 외경의 절반보다 작아야 합니다.'); resetT4Result(); return false; }
+  if (!isPos(fac)) { if (showAlert) alert('단중계수를 확인해주세요.'); resetT4Result(); return false; }
+  if (qty < 1) { if (showAlert) alert('수량은 1 이상이어야 합니다.'); resetT4Result(); return false; } // 버그 픽스: 수량 0 및 음수 입력 차단
+
+  const wkgUnit = (od-wt)*wt*(len/1000)*fac;
+  const wkgTot  = wkgUnit * qty;
+
+  document.getElementById('r4_spec').textContent = `${od.toFixed(2)} × ${wt.toFixed(2)} × ${Math.round(len).toLocaleString()} mm`;
+  document.getElementById('r4_wunit').textContent = fmt(wkgUnit,3)+' kg/본';
+  document.getElementById('r4_wtot').textContent = fmt(wkgTot,2)+' kg  /  '+fmt(wkgTot/1000,4)+' MT ('+qty+'본)';
+  document.getElementById('res4').style.display = 'block';
+  return true;
+}
+function bindPipeWeightAutoCalc() {
+  ['p_od','p_od_u','p_wt','p_wt_u','p_len','p_len_u','p_qty','p_mat','p_fac','p_nps_sz','p_nps_sc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => calcT4(false));
+    el.addEventListener('change', () => calcT4(false));
+  });
+}
+
+// ══════ TAB 1: 무게 & 가격 (영업) ══════
+let inputMode = 'manual'; let npsOD = null, npsWT = null;
+function initNPS() { const sel = document.getElementById('nps_sz'); getSortedNPSKeys().forEach(k => { const o = document.createElement('option'); o.value = k; o.text = `NPS ${k}"  →  OD ${NPS_TABLE[k].od} mm`; sel.appendChild(o); }); }
+function setMode(mode, toggleEl, btn) { inputMode = mode; toggleEl.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('direct-in').style.display = mode==='manual' ? '' : 'none'; document.getElementById('nps-in').style.display = mode==='nps' ? '' : 'none'; }
+function onNPSChange() { const k = document.getElementById('nps_sz').value; const ssel = document.getElementById('nps_sc'); ssel.innerHTML = '<option value="">-- 스케줄 선택 --</option>'; document.getElementById('nps_result').style.display = 'none'; npsOD = null; npsWT = null; if (!k) return; Object.entries(NPS_TABLE[k].sch).forEach(([s,t]) => { const o = document.createElement('option'); o.value = t; o.text = `${s}  (WT ${t} mm)`; ssel.appendChild(o); }); }
+function onSchChange() { const k = document.getElementById('nps_sz').value; const wt = parseFloat(document.getElementById('nps_sc').value); if (!k || isNaN(wt)) return; npsOD = NPS_TABLE[k].od; npsWT = wt; document.getElementById('nd_od').textContent = npsOD; document.getElementById('nd_wt').textContent = npsWT; document.getElementById('nd_id').textContent = (npsOD - 2*npsWT).toFixed(2); document.getElementById('nps_result').style.display = 'flex'; }
+function getPriceUnit(selId) { return document.getElementById(selId)?.value || 'kg'; }
+function unitLabel(u) { return u==='ton' ? '원/ton' : '원/kg'; }
+function toKgPrice(v, u) { return u==='ton' ? v/1000 : v; } 
+function fromKgPrice(v, u) { return u==='ton' ? v*1000 : v; } 
+function onPriceModeChange() {
+  const mode = document.getElementById('price_mode').value; const pu = getPriceUnit('price_unit'); const ulbl = unitLabel(pu); const ph = pu==='ton' ? '원/ton 예: 1,200,000' : '원/kg 예: 1,200';
+  const html = {
+    get_price: `<div class="row"><label>단가</label><div class="inp-wrap"><input type="number" id="p_up" class="inp-main" placeholder="${ph}"><span style="font-size:12px;color:#64748b;white-space:nowrap">${ulbl}</span></div></div>`,
+    get_unit:  `<div class="row"><label>개당 총가격</label><input type="number" id="p_tp" class="inp-full" placeholder="원"></div>`,
+    get_weight:`<div class="row"><label>단가</label><div class="inp-wrap"><input type="number" id="p_up" class="inp-main" placeholder="${ph}"><span style="font-size:12px;color:#64748b;white-space:nowrap">${ulbl}</span></div></div>
+                <div class="row"><label>개당 총가격</label><input type="number" id="p_tp" class="inp-full" placeholder="원"></div>`,
+  }; document.getElementById('price_fields').innerHTML = html[mode]||'';
+}
+function calcT1() {
+  let od, wt;
+  if (inputMode==='nps') { if (!npsOD) { alert('NPS 사이즈와 스케줄을 선택하세요.'); return; } od=npsOD; wt=npsWT; } 
+  else { od=g('w_od','w_od_u'); wt=g('w_wt','w_wt_u'); }
+  
+  const len = g('w_len','w_len_u'); const fac = getFac('w_mat','w_fac');
+  if (!isPos(od)||!isPos(wt)||!isPos(len)) { alert('규격을 모두 입력해주세요.'); return; }
+  if (!validPipeDims(od, wt)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
+  if (!isPos(fac)) { alert('단중계수를 확인해주세요.'); return; }
+
+  const wkg  = (od-wt)*wt*(len/1000)*fac;
+  const mode = document.getElementById('price_mode').value;
+  const pu   = getPriceUnit('price_unit');
+
+  document.getElementById('r1_spec').textContent = `${od.toFixed(2)} × ${wt.toFixed(2)} × ${Math.round(len).toLocaleString()} mm`;
+  document.getElementById('r1_wt').textContent = fmt(wkg,3)+' kg  /  '+fmt(wkg/1000,6)+' MT';
+
+  let lbl='개당 가격', val='-';
+  if (mode==='get_price') {
+    const upRaw = parseFloat(document.getElementById('p_up')?.value||0); const upKg = toKgPrice(upRaw, pu);
+    lbl='개당 가격'; val = upRaw > 0 ? fmtK(wkg*upKg) : '단가 미입력'; if (upRaw > 0) val += `  (${unitLabel(pu)}: ${upRaw.toLocaleString()}원)`;
+  } else if (mode==='get_unit') {
+    const tp = parseFloat(document.getElementById('p_tp')?.value||0);
+    if (tp > 0 && wkg > 0) { const upKg = tp/wkg; const upDisp= fromKgPrice(upKg, pu); lbl=`단가 역산 (${unitLabel(pu)})`; val = Math.round(upDisp).toLocaleString()+'원  →  '+Math.round(upKg).toLocaleString()+'원/kg'; } 
+    else { lbl='단가 역산'; val='총가격 미입력'; }
+  } else {
+    const upRaw=parseFloat(document.getElementById('p_up')?.value||0), tp=parseFloat(document.getElementById('p_tp')?.value||0);
+    if (upRaw > 0 && tp > 0) { const upKg=toKgPrice(upRaw,pu); const rw=tp/upKg; document.getElementById('r1_wt').textContent = fmt(wkg,3)+' kg (치수)  →  '+fmt(rw,3)+' kg (역산)'; lbl='역산 결과'; val='역산된 중량: '+fmt(rw,3)+' kg  /  '+fmt(rw/1000,4)+' MT'; } 
+    else { lbl='본당 중량 역산'; val='단가·총가격 모두 입력 필요'; }
+  }
+  document.getElementById('r1_lbl').textContent = lbl; document.getElementById('r1_val').textContent = val; document.getElementById('res1').style.display = 'block';
+}
+
+// ══════ TAB 2: 단면 감소율 ══════
+function calcT2() {
+  const od1=g('r_od1','r_od1_u'), wt1=g('r_wt1','r_wt1_u'); const od2=g('r_od2','r_od2_u'), wt2=g('r_wt2','r_wt2_u');
+  if (![od1,wt1,od2,wt2].every(isPos)) { alert('규격을 모두 입력해주세요.'); return; }
+  if (!validPipeDims(od1, wt1) || !validPipeDims(od2, wt2)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
+  const a1=(od1-wt1)*wt1*Math.PI, a2=(od2-wt2)*wt2*Math.PI; const red=(a1-a2)/a1*100; const id1=od1-2*wt1, id2=od2-2*wt2;
+  document.getElementById('r2_a1').textContent = fmt(a1)+' mm²  (내경 '+id1.toFixed(2)+' mm)';
+  document.getElementById('r2_a2').textContent = fmt(a2)+' mm²  (내경 '+id2.toFixed(2)+' mm)';
+  const idDiff = id1 - id2;
+  document.getElementById('r2_id').textContent = idDiff >= 0 ? '내경 '+idDiff.toFixed(2)+' mm 감소' : '내경 '+Math.abs(idDiff).toFixed(2)+' mm 증가';
+  document.getElementById('r2_red').textContent = fmt(red,1)+' %';
+  document.getElementById('res2').style.display = 'block';
+}
+
+// ══════ TAB 5: 해외 견적 ══════
+let exInputMode = 'manual'; let exNpsOD = null, exNpsWT = null;
+function initExNPS() { const sel = document.getElementById('ex_nps_sz'); getSortedNPSKeys().forEach(k => { const o = document.createElement('option'); o.value = k; o.text = `NPS ${k}"  →  OD ${NPS_TABLE[k].od} mm`; sel.appendChild(o); }); }
+function setExMode(mode, toggleEl, btn) { exInputMode = mode; toggleEl.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('ex_direct').style.display = mode==='manual' ? '' : 'none'; document.getElementById('ex_nps').style.display = mode==='nps' ? '' : 'none'; exNpsOD = null; exNpsWT = null; }
+function onExNPSChange() { const k = document.getElementById('ex_nps_sz').value; const sc = document.getElementById('ex_nps_sc'); sc.innerHTML = '<option value="">-- 스케줄 선택 --</option>'; document.getElementById('ex_nps_result').style.display = 'none'; exNpsOD = null; exNpsWT = null; if (!k) return; Object.entries(NPS_TABLE[k].sch).forEach(([s,t]) => { const o = document.createElement('option'); o.value = t; o.text = `${s}  (WT ${t} mm)`; sc.appendChild(o); }); }
+function onExSchChange() { const k = document.getElementById('ex_nps_sz').value; const wt = parseFloat(document.getElementById('ex_nps_sc').value); if (!k || isNaN(wt)) return; exNpsOD = NPS_TABLE[k].od; exNpsWT = wt; document.getElementById('ex_nd_od').textContent = exNpsOD; document.getElementById('ex_nd_wt').textContent = exNpsWT; document.getElementById('ex_nd_id').textContent = (exNpsOD - 2*exNpsWT).toFixed(2); document.getElementById('ex_nps_result').style.display = 'flex'; }
+function onExModeChange() {
+  const mode = document.getElementById('ex_mode').value; const fwd = document.getElementById('ex_fwd_fields'); const rev = document.getElementById('ex_rev_fields'); const sym = document.getElementById('ex_cur').value; const sl = sym === 'USD' ? '$' : '€';
+  if (mode === 'fwd') { fwd.style.display = ''; rev.style.display = 'none'; } 
+  else { fwd.style.display = 'none'; rev.style.display = ''; const lbl = document.getElementById('ex_rev_lbl'); const unit = document.getElementById('ex_rev_unit'); const qrow = document.getElementById('ex_rev_qty_row'); const qunit= document.getElementById('ex_rev_qty_unit');
+    if (mode === 'rev_pt') { lbl.textContent = '총 외화금액'; unit.textContent = sym; qrow.style.display = '';  qunit.textContent = 'MT'; } 
+    else if (mode === 'rev_pt_krw') { lbl.textContent = '총 원화금액'; unit.textContent = '원'; qrow.style.display = ''; qunit.textContent = 'MT'; } 
+    else if (mode === 'rev_pt_pcs') { lbl.textContent = '본당 외화 가격'; unit.textContent = sl; qrow.style.display = 'none'; }
+  }
+}
+function onExCurChange() { const cur = document.getElementById('ex_cur').value; document.getElementById('ex_rate_lbl').textContent = cur==='USD' ? '원/USD' : '원/EUR'; onExPriceUnitChange(); onExModeChange(); }
+function onExPriceUnitChange() { const cur = document.getElementById('ex_cur').value; const pu = document.getElementById('ex_price_unit')?.value || 'MT'; const sym = cur==='USD' ? '$' : '€'; const lbl = document.getElementById('ex_sym_lbl'); if (lbl) lbl.textContent = pu==='kg' ? sym+'/kg' : sym+'/MT'; }
+function getExODWT() { if (exInputMode === 'nps') { if (!exNpsOD) return { od: NaN, wt: NaN }; return { od: exNpsOD, wt: exNpsWT }; } return { od: toMM(parseFloat(document.getElementById('ex_od').value),  document.getElementById('ex_od_u').value), wt: toMM(parseFloat(document.getElementById('ex_wt').value),  document.getElementById('ex_wt_u').value) }; }
+
+function calcT5() {
+  const cur = document.getElementById('ex_cur').value; const rate = parseFloat(document.getElementById('ex_rate').value); const mode = document.getElementById('ex_mode').value; const sym = cur === 'USD' ? '$' : '€'; const fac = getFac('ex_mat','ex_fac');
+  const len = toMM(parseFloat(document.getElementById('ex_len').value), document.getElementById('ex_len_u').value); const pcsRaw = parseFloat(document.getElementById('ex_pcs').value); const pcs = Number.isFinite(pcsRaw) ? pcsRaw : 1; const {od, wt} = getExODWT();
+
+  if (!isPos(rate)) { alert('환율을 입력해주세요.'); return; }
+  if (pcs < 1) { alert('수량은 1 이상이어야 합니다.'); return; } // 버그 픽스: 수량 0 및 음수 입력 차단
+
+  const specComplete = isPos(od) && isPos(wt) && isPos(len) && isPos(fac);
+  if (specComplete && !validPipeDims(od, wt)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
+  const hasSpec = specComplete && validPipeDims(od, wt);
+  const wkgUnit = hasSpec ? (od-wt)*wt*(len/1000)*fac : 0; 
+  const totKg   = wkgUnit * pcs; const totMT = totKg / 1000;
+
+  const modeNames = { fwd:'정방향 계산', rev_pt:'역산 (총외화→$/MT)', rev_pt_krw:'역산 (총원화→$/MT)', rev_pt_pcs:'역산 (본당외화→$/MT)' };
+  document.getElementById('e_rate_sum').textContent = `${cur}  /  1${cur} = ${rate.toLocaleString()}원`;
+  document.getElementById('e_mode_sum').textContent = modeNames[mode];
+
+  if (mode === 'fwd') {
+    const priceRaw = parseFloat(document.getElementById('ex_price_t').value); const qty = parseFloat(document.getElementById('ex_qty').value); const pu = document.getElementById('ex_price_unit')?.value || 'MT';
+    if (!isPos(priceRaw) || !isPos(qty)) { alert('단가와 수량을 입력해주세요.'); return; }
+
+    const priceT = pu==='kg' ? priceRaw*1000 : priceRaw; const totalFx = priceT * qty; const totalKRW = totalFx * rate; const priceKg = priceT / 1000 * rate;
+    const dispUnit = pu==='kg' ? `${sym}${fmt(priceRaw,3)}/kg  (≈ ${sym}${fmt(priceT,2)}/MT)` : `${sym}${fmt(priceT,2)}/MT`;
+
+    document.getElementById('e_fwd_block').style.display = ''; document.getElementById('e_rev_block').style.display = 'none';
+    document.getElementById('e_price_t').textContent = dispUnit; document.getElementById('e_qty').textContent = fmt(qty,3) + ' MT  (' + fmt(qty*1000,0) + ' kg)';
+    document.getElementById('e_total_fx').textContent = sym + fmt(totalFx,2); document.getElementById('e_total_krw').textContent= '₩ ' + Math.round(totalKRW).toLocaleString();
+    document.getElementById('e_kg_krw').textContent = '₩ ' + fmt(priceKg,1) + ' / kg  /  ₩ ' + Math.round(priceKg*1000).toLocaleString() + ' / MT';
+
+    if (hasSpec) showPipeDetail(od, wt, len, pcs, wkgUnit, totKg, totMT, priceT, priceKg, sym, rate); else document.getElementById('e_pipe_block').style.display = 'none';
+  } else if (mode === 'rev_pt') {
+    const totalFx = parseFloat(document.getElementById('ex_rev_val').value); const qty = parseFloat(document.getElementById('ex_rev_qty').value);
+    if (!isPos(totalFx) || !isPos(qty)) { alert('총 외화금액과 수량(MT)을 입력해주세요.'); return; }
+    const priceT = totalFx / qty; const priceKg = priceT / 1000 * rate;
+    setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);
+  } else if (mode === 'rev_pt_krw') {
+    const totalKRW= parseFloat(document.getElementById('ex_rev_val').value); const qty = parseFloat(document.getElementById('ex_rev_qty').value);
+    if (!isPos(totalKRW) || !isPos(qty)) { alert('총 원화금액과 수량(MT)을 입력해주세요.'); return; }
+    const totalFx = totalKRW / rate; const priceT = totalFx / qty; const priceKg = priceT / 1000 * rate;
+    setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);
+  } else if (mode === 'rev_pt_pcs') {
+    const pricePcsFx = parseFloat(document.getElementById('ex_rev_val').value);
+    if (!isPos(pricePcsFx)) { alert('본당 외화 가격을 입력해주세요.'); return; }
+    if (!hasSpec) { alert('본당 역산을 위해 파이프 규격(OD·WT·길이)을 입력해주세요.'); return; }
+    if (wkgUnit <= 0) { alert('본당 중량이 0 이하입니다. 파이프 규격을 다시 확인해주세요.'); return; } // 버그 픽스: 0으로 나누기 차단
+
+    const priceT = pricePcsFx / (wkgUnit / 1000); const priceKg = priceT / 1000 * rate; const qty = totMT; const totalFx = priceT * qty;
+    setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);
+  }
+  document.getElementById('res5').style.display = 'block';
+}
+
+function setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT) {
+  document.getElementById('e_rev_block').style.display = ''; document.getElementById('e_fwd_block').style.display = 'none';
+  document.getElementById('e_rev_pt').textContent = sym + fmt(priceT,2) + ' / MT'; document.getElementById('e_rev_pt_krw').textContent = '₩ ' + fmt(priceT*rate,0) + ' / MT'; document.getElementById('e_rev_kg_krw').textContent = '₩ ' + fmt(priceKg,1) + ' / kg';
+  if (hasSpec) showPipeDetail(od, wt, len, pcs, wkgUnit, totKg, totMT, priceT, priceKg, sym, rate); else document.getElementById('e_pipe_block').style.display = 'none';
+}
+
+function showPipeDetail(od, wt, len, pcs, wkgUnit, totKg, totMT, priceT, priceKg, sym, rate) {
+  const pricePcsFx = wkgUnit / 1000 * priceT; const pricePcsKrw = wkgUnit * priceKg; const totalPipeFx = pricePcsFx * pcs; const totalPipeKrw = pricePcsKrw * pcs;
+  document.getElementById('e_p_spec').textContent = `OD ${od.toFixed(2)} × WT ${wt.toFixed(2)} × L ${Math.round(len).toLocaleString()}mm × ${pcs}본`;
+  document.getElementById('e_p_wunit').textContent = fmt(wkgUnit,3)+' kg/본'; document.getElementById('e_p_wtot').textContent = fmt(totKg,2)+' kg  ('+fmt(totMT,4)+' MT)';
+  document.getElementById('e_p_pfx').textContent = sym+fmt(pricePcsFx,2)+' / 본'; document.getElementById('e_p_pkrw').textContent = '₩ '+Math.round(pricePcsKrw).toLocaleString()+' / 본';
+  document.getElementById('e_p_tfx').textContent = sym+fmt(totalPipeFx,2); document.getElementById('e_p_tkrw').textContent = '₩ '+Math.round(totalPipeKrw).toLocaleString();
+  document.getElementById('e_pipe_block').style.display = 'block';
+}
+
+function activateInitialTabFromQuery() {
+  const tab = new URLSearchParams(location.search).get('tab') || 'weight';
+  const map = { price:'t1', weight:'t4', reduce:'t2', draw:'t2', export:'t5' };
+  const id = map[tab] || tab;
+  const btn = Array.from(document.querySelectorAll('.tab')).find(el => (el.getAttribute('onclick') || '').includes(`'${id}'`));
+  if (btn && document.getElementById(id)) switchTab(id, btn);
+}
+
+initNPS(); initExNPS(); initpNPS(); bindPipeWeightAutoCalc(); onPriceModeChange(); onExModeChange(); onExPriceUnitChange(); activateInitialTabFromQuery();
+</script>
+</body>
+</html>
