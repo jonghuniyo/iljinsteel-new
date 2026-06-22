@@ -1,5 +1,27 @@
 const STEELMAX_BASE = "https://steelmax.co.kr";
 const UA = "ILJIN-Portal-Steelmax-Importer/1.0 (+personal-use; contact: portal-user)";
+const CACHE = new Map();
+
+function cacheGet(key, ttlMs) {
+  const hit = CACHE.get(key);
+  if (!hit) return null;
+  const age = Date.now() - hit.time;
+  if (age <= ttlMs) return hit.value;
+  return null;
+}
+
+function cacheSet(key, value) {
+  CACHE.set(key, { time: Date.now(), value });
+  if (CACHE.size > 120) CACHE.delete(CACHE.keys().next().value);
+  return value;
+}
+
+async function cached(key, ttlMs, producer) {
+  const hit = cacheGet(key, ttlMs);
+  if (hit) return hit;
+  const value = await producer();
+  return cacheSet(key, value);
+}
 
 function send(res, status, data, extraHeaders = {}) {
   res.statusCode = status;
@@ -17,7 +39,7 @@ function getQuery(req) {
 
 async function fetchJson(url) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8500);
+  const timer = setTimeout(() => controller.abort(), 5200);
   try {
     const res = await fetch(url, {
       headers: {
@@ -36,7 +58,7 @@ async function fetchJson(url) {
 
 async function fetchText(url) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8500);
+  const timer = setTimeout(() => controller.abort(), 5200);
   try {
     const res = await fetch(url, {
       headers: {
@@ -137,46 +159,54 @@ function buildWpUrl(path, params = {}) {
 }
 
 async function listCategories() {
-  const { data } = await fetchJson(buildWpUrl("/wp-json/wp/v2/categories", { per_page: 100, hide_empty: true }));
-  return data.map((cat) => ({
-    id: cat.id,
-    name: stripHtml(cat.name),
-    slug: cat.slug,
-    count: cat.count,
-    parent: cat.parent,
-  })).filter((cat) => cat.count > 0);
+  return cached("categories", 24 * 60 * 60 * 1000, async () => {
+    const { data } = await fetchJson(buildWpUrl("/wp-json/wp/v2/categories", { per_page: 100, hide_empty: true }));
+    return data.map((cat) => ({
+      id: cat.id,
+      name: stripHtml(cat.name),
+      slug: cat.slug,
+      count: cat.count,
+      parent: cat.parent,
+    })).filter((cat) => cat.count > 0);
+  });
 }
 
 async function searchPosts(query) {
   const q = (query.q || "").trim();
   const page = Math.max(1, Math.min(50, Number(query.page || 1) || 1));
-  const perPage = Math.max(5, Math.min(50, Number(query.per_page || 20) || 20));
-  const params = {
-    per_page: perPage,
-    page,
-    search: q,
-    orderby: query.orderby || (q ? "relevance" : "date"),
-    order: "desc",
-    _fields: "id,date,modified,link,title,excerpt,categories",
-  };
-  if (query.category) params.categories = query.category;
-  const { data, headers } = await fetchJson(buildWpUrl("/wp-json/wp/v2/posts", params));
-  return {
-    items: data.map(normalizePost),
-    page,
-    perPage,
-    total: Number(headers.get("x-wp-total") || 0),
-    totalPages: Number(headers.get("x-wp-totalpages") || 0),
-    query: q,
-  };
+  const perPage = Math.max(5, Math.min(20, Number(query.per_page || 10) || 10));
+  const cacheKey = `search:${q}:${query.category || ""}:${page}:${perPage}`;
+  return cached(cacheKey, 30 * 60 * 1000, async () => {
+    const params = {
+      per_page: perPage,
+      page,
+      search: q,
+      orderby: query.orderby || (q ? "relevance" : "date"),
+      order: "desc",
+      _fields: "id,date,modified,link,title,excerpt,categories",
+    };
+    if (query.category) params.categories = query.category;
+    const { data, headers } = await fetchJson(buildWpUrl("/wp-json/wp/v2/posts", params));
+    return {
+      items: data.map(normalizePost),
+      page,
+      perPage,
+      total: Number(headers.get("x-wp-total") || 0),
+      totalPages: Number(headers.get("x-wp-totalpages") || 0),
+      query: q,
+      cachedAt: new Date().toISOString(),
+    };
+  });
 }
 
 async function getPost(query) {
   if (query.id) {
-    const { data } = await fetchJson(buildWpUrl(`/wp-json/wp/v2/posts/${encodeURIComponent(query.id)}`, {
-      _fields: "id,date,modified,link,title,excerpt,content,categories",
-    }));
-    return normalizePost(data);
+    return cached(`post:${query.id}`, 24 * 60 * 60 * 1000, async () => {
+      const { data } = await fetchJson(buildWpUrl(`/wp-json/wp/v2/posts/${encodeURIComponent(query.id)}`, {
+        _fields: "id,date,modified,link,title,excerpt,content,categories",
+      }));
+      return normalizePost(data);
+    });
   }
   if (query.url) {
     const url = new URL(query.url);

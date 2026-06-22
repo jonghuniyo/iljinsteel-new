@@ -1,5 +1,11 @@
 (function () {
   const STORE_KEY = "iljin-steelmax-saved-v2";
+  const API_CACHE_KEY = "iljin-steelmax-api-cache-v1";
+  const API_CACHE_TTL = {
+    search: 30 * 60 * 1000,
+    post: 24 * 60 * 60 * 1000,
+    categories: 7 * 24 * 60 * 60 * 1000,
+  };
   const state = {
     query: "",
     category: "",
@@ -43,11 +49,51 @@
     } catch {}
   }
 
+  function apiCacheKey(params) {
+    const pairs = Object.entries(params)
+      .filter(([, value]) => value !== undefined && value !== null && value !== "")
+      .sort(([a], [b]) => a.localeCompare(b));
+    return pairs.map(([key, value]) => `${key}=${value}`).join("&");
+  }
+
+  function apiCacheType(params) {
+    if (params.action === "post") return "post";
+    if (params.action === "categories") return "categories";
+    return "search";
+  }
+
+  function readApiCache(params) {
+    try {
+      const all = JSON.parse(localStorage.getItem(API_CACHE_KEY) || "{}");
+      const key = apiCacheKey(params);
+      const hit = all[key];
+      const ttl = API_CACHE_TTL[apiCacheType(params)] || API_CACHE_TTL.search;
+      if (hit && Date.now() - hit.time < ttl) return hit.value;
+    } catch {}
+    return null;
+  }
+
+  function writeApiCache(params, value) {
+    try {
+      const all = JSON.parse(localStorage.getItem(API_CACHE_KEY) || "{}");
+      const key = apiCacheKey(params);
+      all[key] = { time: Date.now(), value };
+      const entries = Object.entries(all).sort((a, b) => b[1].time - a[1].time).slice(0, 80);
+      localStorage.setItem(API_CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
+    } catch {}
+  }
+
   async function api(params) {
+    const cached = readApiCache(params);
+    if (cached) return { ...cached, fromCache: true };
     const qs = new URLSearchParams(params);
-    const res = await fetch(`/api/steelmax?${qs.toString()}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6500);
+    const res = await fetch(`/api/steelmax?${qs.toString()}`, { signal: controller.signal });
+    clearTimeout(timer);
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.ok) throw new Error(json.error || `자료실 API ${res.status}`);
+    writeApiCache(params, json);
     return json;
   }
 
@@ -231,10 +277,10 @@
     }
     setStatus("검색 중...");
     try {
-      const data = await api({ q: state.query, category: state.category, page: state.page, per_page: 20 });
+      const data = await api({ q: state.query, category: state.category, page: state.page, per_page: 10 });
       state.items = data.items || [];
       renderResults();
-      setStatus(`검색 결과 ${data.total || state.items.length}건${data.totalPages ? ` · ${data.page}/${data.totalPages}쪽` : ""}`);
+      setStatus(`${data.fromCache ? "저장된 결과" : "검색 결과"} ${data.total || state.items.length}건${data.totalPages ? ` · ${data.page}/${data.totalPages}쪽` : ""}`);
     } catch (err) {
       state.items = [];
       renderResults();
