@@ -138,7 +138,7 @@
       .smx-tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
       .smx-tools button,.smx-tools a{border:1px solid #dbe3ef;background:#fff;border-radius:11px;padding:8px 11px;font-size:12px;font-weight:900;color:#334155;text-decoration:none;cursor:pointer}
       .smx-tools .blue{background:#0c4199;color:#fff;border-color:#0c4199}
-      .smx-empty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:#64748b;line-height:1.7}
+      .smx-empty{flex:1 1 auto;width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:#64748b;line-height:1.7}
       .smx-saved-title{font-size:12px;font-weight:900;color:#0f172a;margin-top:2px;flex-shrink:0}
       .smx-note{font-size:11px;line-height:1.6;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:13px;padding:10px}
       .smx-status{font-size:11px;color:#64748b;min-height:16px;flex-shrink:0}

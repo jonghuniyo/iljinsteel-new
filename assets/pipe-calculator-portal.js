@@ -6,7 +6,6 @@
     ["계산기 열기", "weight"],
     ["파이프 무게", "weight"],
     ["수율 계산", "weight"],
-    ["무게", "weight"],
     ["무게·가격", "price"],
     ["무게 가격", "price"],
     ["가격 계산", "price"],
@@ -103,6 +102,9 @@
     (event) => {
       const target = event.target.closest?.("button,a");
       if (!target || target.closest("#ilPipeOverlay")) return;
+      // 단위 변환기(길이/무게/압력/온도) 탭은 계산기 트리거가 아니므로 가로채지 않는다.
+      const group = target.parentElement;
+      if (group && /(길이|압력|온도)/.test(group.textContent || "")) return;
       const tab = menuTabFromText(target.textContent || "");
       if (!tab) return;
       event.preventDefault();

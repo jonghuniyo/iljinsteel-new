@@ -138,6 +138,10 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+// 오피넷(국내 유가) 공개 API 키. 서버(함수) 측에서만 사용하므로 브라우저에 노출되지 않는다.
+// 환경변수 OPINET_API_KEY 가 있으면 그것을 우선 사용하고, 없으면 이 내장 키를 사용한다.
+const BUILT_IN_OPINET_KEY = 'F260602649';
+
 function getOpinetKey() {
   return process.env.OPINET_API_KEY
     || process.env.OPINET_CODE
@@ -146,7 +150,7 @@ function getOpinetKey() {
     || process.env.OPINET_KEY
     || process.env.VERCEL_OPINET_API_KEY
     || process.env.VITE_OPINET_API_KEY
-    || '';
+    || BUILT_IN_OPINET_KEY;
 }
 
 async function fetchOpinetFuel(key) {

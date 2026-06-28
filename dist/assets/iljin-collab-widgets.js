@@ -1,4 +1,19 @@
 (function () {
+  // 모바일(<=900px)에서는 사이드바를 기본 접힘으로 시작한다.
+  // 번들(React 스토어)이 rehydrate 하기 전에(이 스크립트는 head에서 모듈보다 먼저 실행됨)
+  // 저장된 sidebarOpen 값을 false 로 보정해, 데스크톱에서 열어둔 상태가 모바일까지 따라오지 않게 한다.
+  try {
+    if (window.innerWidth <= 900) {
+      const k = "iljin-dashboard-store";
+      let o = null;
+      try { o = JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { o = null; }
+      if (!o || typeof o !== "object") o = { state: {}, version: 0 };
+      if (!o.state || typeof o.state !== "object") o.state = {};
+      o.state.sidebarOpen = false;
+      localStorage.setItem(k, JSON.stringify(o));
+    }
+  } catch (e) {}
+
   const DESKTOP_QUERY = "(min-width: 901px)";
   const mq = window.matchMedia(DESKTOP_QUERY);
   const FOCUS_KEY = "iljin-focus-me-v1";
@@ -16,6 +31,7 @@
     "iljin-portal-users",
     "iljin-portal-session",
     "iljin-daily-memo",
+    "iljin-memo-postits",
     "iljin-header-settings",
     "iljin-home-widget-visibility",
     "iljin-life-dday-settings",

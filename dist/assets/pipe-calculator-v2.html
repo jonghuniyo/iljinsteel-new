@@ -24,6 +24,7 @@ body{font-family:'맑은 고딕',sans-serif;background:#fff;min-height:100vh;min
 .content.active{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
+.calc-err{display:none;margin:10px 0 0;padding:10px 12px;font-size:13px;font-weight:700;line-height:1.5;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:10px}
 .sec{font-size:12px;font-weight:700;color:#64748b;margin:16px 0 8px;padding-left:10px;border-left:3px solid #1A73E8;display:flex;align-items:center;gap:6px}
 .sec:first-child{margin-top:0}
 
@@ -164,6 +165,7 @@ input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
     </div>
 
     <button class="btn-calc" onclick="calcT4()">중량 계산</button>
+    <div class="calc-err" id="err4" role="alert"></div>
 
     <div class="res-box" id="res4">
       <div class="r-row"><span>환산 규격</span><span id="r4_spec">-</span></div>
@@ -261,6 +263,7 @@ input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
     <div id="price_fields"></div>
 
     <button class="btn-calc" onclick="calcT1()">계산하기</button>
+    <div class="calc-err" id="err1" role="alert"></div>
 
     <div class="res-box" id="res1">
       <div class="r-row"><span>규격 (mm)</span><span id="r1_spec">-</span></div>
@@ -412,6 +415,7 @@ input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
     </div>
 
     <button class="btn-calc" onclick="calcT5()">견적 계산</button>
+    <div class="calc-err" id="err5" role="alert"></div>
 
     <div class="res-box" id="res5">
       <div class="r-row"><span>통화 / 환율</span><span id="e_rate_sum">-</span></div>
@@ -465,6 +469,7 @@ input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
     <div class="row"><label>두께 WT</label><div class="inp-wrap"><input type="number" id="r_wt2" class="inp-main" placeholder="mm" step="0.01"><select id="r_wt2_u" class="inp-unit"><option value="mm">mm</option><option value="in">inch</option></select></div></div>
 
     <button class="btn-calc" onclick="calcT2()">감소율 계산</button>
+    <div class="calc-err" id="err2" role="alert"></div>
 
     <div class="res-box" id="res2">
       <div class="r-row"><span>전 단면적 A₁</span><b id="r2_a1">-</b></div>
@@ -521,6 +526,10 @@ function switchTab(id, el) {
   document.querySelectorAll('.content').forEach(c=>c.classList.remove('active')); document.getElementById(id).classList.add('active');
 }
 
+// 입력 오류를 팝업(alert) 대신 빨간 인라인 메시지로 표시
+function showErr(key, msg) { const el = document.getElementById('err' + key); if (!el) return; el.textContent = '⚠ ' + msg; el.style.display = 'block'; }
+function clearErr(key) { const el = document.getElementById('err' + key); if (el) { el.textContent = ''; el.style.display = 'none'; } }
+
 // ══════ TAB 4: 파이프 중량 계산 ══════
 let pInputMode = 'manual'; let pNpsOD = null, pNpsWT = null;
 function initpNPS() { const sel = document.getElementById('p_nps_sz'); getSortedNPSKeys().forEach(k => { const o = document.createElement('option'); o.value = k; o.text = `NPS ${k}"  →  OD ${NPS_TABLE[k].od} mm`; sel.appendChild(o); }); }
@@ -535,7 +544,8 @@ function resetT4Result() {
 }
 function calcT4(showAlert=true) {
   let od, wt;
-  if (pInputMode==='nps') { if (!pNpsOD) { if (showAlert) alert('NPS 사이즈와 스케줄을 선택하세요.'); resetT4Result(); return false; } od=pNpsOD; wt=pNpsWT; } 
+  clearErr('4');
+  if (pInputMode==='nps') { if (!pNpsOD) { if (showAlert) showErr('4','NPS 사이즈와 스케줄을 선택하세요.'); resetT4Result(); return false; } od=pNpsOD; wt=pNpsWT; }
   else { od=g('p_od','p_od_u'); wt=g('p_wt','p_wt_u'); }
   
   const len = g('p_len','p_len_u');
@@ -543,10 +553,10 @@ function calcT4(showAlert=true) {
   const qty = Number.isFinite(qtyRaw) ? qtyRaw : 1;
   const fac = getFac('p_mat','p_fac');
 
-  if (!isPos(od)||!isPos(wt)||!isPos(len)) { if (showAlert) alert('규격을 모두 입력해주세요.'); resetT4Result(); return false; }
-  if (!validPipeDims(od, wt)) { if (showAlert) alert('두께는 외경의 절반보다 작아야 합니다.'); resetT4Result(); return false; }
-  if (!isPos(fac)) { if (showAlert) alert('단중계수를 확인해주세요.'); resetT4Result(); return false; }
-  if (qty < 1) { if (showAlert) alert('수량은 1 이상이어야 합니다.'); resetT4Result(); return false; } // 버그 픽스: 수량 0 및 음수 입력 차단
+  if (!isPos(od)||!isPos(wt)||!isPos(len)) { if (showAlert) showErr('4','규격을 모두 입력해주세요.'); resetT4Result(); return false; }
+  if (!validPipeDims(od, wt)) { if (showAlert) showErr('4','두께는 외경의 절반보다 작아야 합니다.'); resetT4Result(); return false; }
+  if (!isPos(fac)) { if (showAlert) showErr('4','단중계수를 확인해주세요.'); resetT4Result(); return false; }
+  if (qty < 1) { if (showAlert) showErr('4','수량은 1 이상이어야 합니다.'); resetT4Result(); return false; } // 버그 픽스: 수량 0 및 음수 입력 차단
 
   const wkgUnit = (od-wt)*wt*(len/1000)*fac;
   const wkgTot  = wkgUnit * qty;
@@ -587,13 +597,14 @@ function onPriceModeChange() {
 }
 function calcT1() {
   let od, wt;
-  if (inputMode==='nps') { if (!npsOD) { alert('NPS 사이즈와 스케줄을 선택하세요.'); return; } od=npsOD; wt=npsWT; } 
+  clearErr('1');
+  if (inputMode==='nps') { if (!npsOD) { showErr('1','NPS 사이즈와 스케줄을 선택하세요.'); return; } od=npsOD; wt=npsWT; }
   else { od=g('w_od','w_od_u'); wt=g('w_wt','w_wt_u'); }
-  
+
   const len = g('w_len','w_len_u'); const fac = getFac('w_mat','w_fac');
-  if (!isPos(od)||!isPos(wt)||!isPos(len)) { alert('규격을 모두 입력해주세요.'); return; }
-  if (!validPipeDims(od, wt)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
-  if (!isPos(fac)) { alert('단중계수를 확인해주세요.'); return; }
+  if (!isPos(od)||!isPos(wt)||!isPos(len)) { showErr('1','규격을 모두 입력해주세요.'); return; }
+  if (!validPipeDims(od, wt)) { showErr('1','두께는 외경의 절반보다 작아야 합니다.'); return; }
+  if (!isPos(fac)) { showErr('1','단중계수를 확인해주세요.'); return; }
 
   const wkg  = (od-wt)*wt*(len/1000)*fac;
   const mode = document.getElementById('price_mode').value;
@@ -620,9 +631,10 @@ function calcT1() {
 
 // ══════ TAB 2: 단면 감소율 ══════
 function calcT2() {
+  clearErr('2');
   const od1=g('r_od1','r_od1_u'), wt1=g('r_wt1','r_wt1_u'); const od2=g('r_od2','r_od2_u'), wt2=g('r_wt2','r_wt2_u');
-  if (![od1,wt1,od2,wt2].every(isPos)) { alert('규격을 모두 입력해주세요.'); return; }
-  if (!validPipeDims(od1, wt1) || !validPipeDims(od2, wt2)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
+  if (![od1,wt1,od2,wt2].every(isPos)) { showErr('2','규격을 모두 입력해주세요.'); return; }
+  if (!validPipeDims(od1, wt1) || !validPipeDims(od2, wt2)) { showErr('2','두께는 외경의 절반보다 작아야 합니다.'); return; }
   const a1=(od1-wt1)*wt1*Math.PI, a2=(od2-wt2)*wt2*Math.PI; const red=(a1-a2)/a1*100; const id1=od1-2*wt1, id2=od2-2*wt2;
   document.getElementById('r2_a1').textContent = fmt(a1)+' mm²  (내경 '+id1.toFixed(2)+' mm)';
   document.getElementById('r2_a2').textContent = fmt(a2)+' mm²  (내경 '+id2.toFixed(2)+' mm)';
@@ -655,11 +667,12 @@ function calcT5() {
   const cur = document.getElementById('ex_cur').value; const rate = parseFloat(document.getElementById('ex_rate').value); const mode = document.getElementById('ex_mode').value; const sym = cur === 'USD' ? '$' : '€'; const fac = getFac('ex_mat','ex_fac');
   const len = toMM(parseFloat(document.getElementById('ex_len').value), document.getElementById('ex_len_u').value); const pcsRaw = parseFloat(document.getElementById('ex_pcs').value); const pcs = Number.isFinite(pcsRaw) ? pcsRaw : 1; const {od, wt} = getExODWT();
 
-  if (!isPos(rate)) { alert('환율을 입력해주세요.'); return; }
-  if (pcs < 1) { alert('수량은 1 이상이어야 합니다.'); return; } // 버그 픽스: 수량 0 및 음수 입력 차단
+  clearErr('5');
+  if (!isPos(rate)) { showErr('5','환율을 입력해주세요.'); return; }
+  if (pcs < 1) { showErr('5','수량은 1 이상이어야 합니다.'); return; } // 버그 픽스: 수량 0 및 음수 입력 차단
 
   const specComplete = isPos(od) && isPos(wt) && isPos(len) && isPos(fac);
-  if (specComplete && !validPipeDims(od, wt)) { alert('두께는 외경의 절반보다 작아야 합니다.'); return; }
+  if (specComplete && !validPipeDims(od, wt)) { showErr('5','두께는 외경의 절반보다 작아야 합니다.'); return; }
   const hasSpec = specComplete && validPipeDims(od, wt);
   const wkgUnit = hasSpec ? (od-wt)*wt*(len/1000)*fac : 0; 
   const totKg   = wkgUnit * pcs; const totMT = totKg / 1000;
@@ -670,7 +683,7 @@ function calcT5() {
 
   if (mode === 'fwd') {
     const priceRaw = parseFloat(document.getElementById('ex_price_t').value); const qty = parseFloat(document.getElementById('ex_qty').value); const pu = document.getElementById('ex_price_unit')?.value || 'MT';
-    if (!isPos(priceRaw) || !isPos(qty)) { alert('단가와 수량을 입력해주세요.'); return; }
+    if (!isPos(priceRaw) || !isPos(qty)) { showErr('5','단가와 수량을 입력해주세요.'); return; }
 
     const priceT = pu==='kg' ? priceRaw*1000 : priceRaw; const totalFx = priceT * qty; const totalKRW = totalFx * rate; const priceKg = priceT / 1000 * rate;
     const dispUnit = pu==='kg' ? `${sym}${fmt(priceRaw,3)}/kg  (≈ ${sym}${fmt(priceT,2)}/MT)` : `${sym}${fmt(priceT,2)}/MT`;
@@ -683,19 +696,19 @@ function calcT5() {
     if (hasSpec) showPipeDetail(od, wt, len, pcs, wkgUnit, totKg, totMT, priceT, priceKg, sym, rate); else document.getElementById('e_pipe_block').style.display = 'none';
   } else if (mode === 'rev_pt') {
     const totalFx = parseFloat(document.getElementById('ex_rev_val').value); const qty = parseFloat(document.getElementById('ex_rev_qty').value);
-    if (!isPos(totalFx) || !isPos(qty)) { alert('총 외화금액과 수량(MT)을 입력해주세요.'); return; }
+    if (!isPos(totalFx) || !isPos(qty)) { showErr('5','총 외화금액과 수량(MT)을 입력해주세요.'); return; }
     const priceT = totalFx / qty; const priceKg = priceT / 1000 * rate;
     setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);
   } else if (mode === 'rev_pt_krw') {
     const totalKRW= parseFloat(document.getElementById('ex_rev_val').value); const qty = parseFloat(document.getElementById('ex_rev_qty').value);
-    if (!isPos(totalKRW) || !isPos(qty)) { alert('총 원화금액과 수량(MT)을 입력해주세요.'); return; }
+    if (!isPos(totalKRW) || !isPos(qty)) { showErr('5','총 원화금액과 수량(MT)을 입력해주세요.'); return; }
     const totalFx = totalKRW / rate; const priceT = totalFx / qty; const priceKg = priceT / 1000 * rate;
     setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);
   } else if (mode === 'rev_pt_pcs') {
     const pricePcsFx = parseFloat(document.getElementById('ex_rev_val').value);
-    if (!isPos(pricePcsFx)) { alert('본당 외화 가격을 입력해주세요.'); return; }
-    if (!hasSpec) { alert('본당 역산을 위해 파이프 규격(OD·WT·길이)을 입력해주세요.'); return; }
-    if (wkgUnit <= 0) { alert('본당 중량이 0 이하입니다. 파이프 규격을 다시 확인해주세요.'); return; } // 버그 픽스: 0으로 나누기 차단
+    if (!isPos(pricePcsFx)) { showErr('5','본당 외화 가격을 입력해주세요.'); return; }
+    if (!hasSpec) { showErr('5','본당 역산을 위해 파이프 규격(OD·WT·길이)을 입력해주세요.'); return; }
+    if (wkgUnit <= 0) { showErr('5','본당 중량이 0 이하입니다. 파이프 규격을 다시 확인해주세요.'); return; } // 버그 픽스: 0으로 나누기 차단
 
     const priceT = pricePcsFx / (wkgUnit / 1000); const priceKg = priceT / 1000 * rate; const qty = totMT; const totalFx = priceT * qty;
     setRevResult(sym, cur, rate, priceT, priceKg, qty, totalFx, hasSpec, od, wt, len, pcs, wkgUnit, totKg, totMT);

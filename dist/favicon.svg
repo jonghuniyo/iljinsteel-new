@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="14" fill="#0C4199"/>
-  <rect x="10" y="24" width="44" height="10" rx="5" fill="#ffffff"/>
-  <rect x="10" y="38" width="44" height="6" rx="3" fill="#FF7F00"/>
-  <rect x="10" y="22" width="8" height="14" rx="4" fill="#ffffff"/>
-  <rect x="46" y="22" width="8" height="14" rx="4" fill="#ffffff"/>
+  <!-- 강관(steel pipe) 단면: 바깥 링 + 안쪽 구멍 -->
+  <circle cx="32" cy="32" r="18" fill="none" stroke="#ffffff" stroke-width="7"/>
+  <circle cx="32" cy="32" r="9.5" fill="none" stroke="#FF7F00" stroke-width="4"/>
+  <!-- 광택 하이라이트 -->
+  <path d="M20 22 A18 18 0 0 1 44 22" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity="0.55"/>
 </svg>
