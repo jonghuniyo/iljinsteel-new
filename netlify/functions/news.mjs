@@ -126,6 +126,14 @@ function normLink(l = "") {
   }
 }
 
+// 해외(영어) 섹션 필터: Bloomberg 등 일부 영어 피드에 일본어/중국어 기사가 섞여 들어오므로
+// 일본어 가나·한중일 한자·한글이 포함된 제목은 제외하고, 라틴 문자가 있는 영어 기사만 남긴다.
+function isEnglishText(t = "") {
+  const s = String(t);
+  if (/[぀-ヿ一-鿿가-힣]/u.test(s)) return false;
+  return /[A-Za-z]/.test(s);
+}
+
 function dedupe(items) {
   const seenTitle = new Set();
   const seenLink = new Set();
@@ -268,7 +276,7 @@ export const handler = async () => {
       .sort(sortNews);
 
     const domestic = all.filter(i => i.feedType === "ko");
-    const international = all.filter(i => i.feedType === "en");
+    const international = all.filter(i => i.feedType === "en" && isEnglishText(i.title));
     const domesticTop = domestic.slice(0, 8);
     // 철강·관세 체크 섹션은 '국내 주요 뉴스'에 이미 노출된 기사와 겹치지 않게 한다.
     const shownLinks = new Set(domesticTop.map(i => normLink(i.link)));
